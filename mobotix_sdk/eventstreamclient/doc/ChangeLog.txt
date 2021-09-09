@@ -1,0 +1,131 @@
+Release version 1.1.0-7 - Maintenance release
+
+Changes:
+- Deprecated function play(timestamp);
+- Added function seek() to position the player on before issuing a play() command
+- Added function subscribe() to subscribe to camera events
+- Added function alarmlist() to load list of alarm events from the camera
+- Added function to ping() camera through eventstream protocol
+- Added new method variants that are based on const char * instead of
+std::string to wour around memory corrpution problems on Windows 
+
+Fixes: 
+- Dropping thermal raw data if verification check fails 
+
+Release version 1.1.0-6 - Maintenance release
+
+Fix: No "Space left in recv buffer" issue
+
+Release version 1.1.0-5 - Maintenance release
+
+New:
+- Added access to thermal information (FFC counter).
+
+Changes:
+- Renamed function gain() of class MX_ThermalRawData to resolution(). Returns the resolution of an advanced radiometry thermal sensor (high or low).
+
+Release version 1.1.0-4 - Maintenance release
+
+- Fix: Linux versions are now compiled with -fPIC
+
+Release version 1.1.0 - Release
+
+New:
+- Added support to request and receive thermal raw data from cameras with thermal sensor
+    Starting with Firmware 5.2.0 cameras with thermal sensor can include the raw data of the sensor into the video stream. The SDK extracts this data and passes it to the client application. If a TR sensor (with advanced radiometry support) is used and "Linear Mode" is activated, the raw data can also be converted to absolute temperatures. 
+    The raw data is compressed using the lz4 compression algorithm before transmission. The SDK automatically decompresses the data using the lz4 library.
+    
+Changes:
+- Removed constructors from the SDK interface 
+- Added a factory class to create SDK instances. Handler classes are now always passed as shared_ptr objects to the SDK. Passing raw pointers is no longer supported. 
+- API updates to use unique_ptr when passing objects to the handler classes.
+- API header cleanup. Removed references to internal SDK classes and data structures.
+- Included parts of lz4-1-8.2 (https://github.com/lz4/lz4) to decompress thermal raw data. See LICENSE_LZ4
+- New API to access the internal MxPEG decoder. Using this API locally available MxPEG frames can be decoded.
+
+Release version 1.0.1 - Maintenance release
+
+New:
+
+- The audio backchannel now also supports sending aLaw encoded audio data to
+	the camera (speaker).
+	The function sendAudioStart() now takes a parameter to specify the
+	codec of audio data that will be sent to the camera. Supported
+	encodings are:
+	PCM16 (eac_pcm), 1 channel, sample rate 16000
+	aLaw (eac_alaw), 1 channel sample rate 8000
+	The function sendAudio() also supports the two above encodings for
+	audio payload. Automatic recoding between aLaw <-> PCM16 is done as
+	required by the combination of "send format" and "payload format".
+
+- Countermeasures for high memory load (in asynchronous mode)
+        If the system cannot process the incoming data fast enough, the SDK will at 
+        some point start dropping data to avoid memory overflows in its input queues. To do this 
+        it uses a two step approach: First the SDK will start dropping whole MxPEG frames before they 
+        are passed to the decoder, audio and status information will not be affected by this. If that 
+        is not sufficient to cope with the incoming data stream, the SDK will also drop raw network 
+        packages as they are received, without even analyzing them.
+
+        You can use new statistics function to get the current queue sizes and drop counters. This way 
+        the application can detect if the system is not capable of processing all data that is sent 
+        by the camera. This allows the application to reconfigure the streaming session and reduce
+        frame rate or image resolution.
+        
+- Added a sample application that demonstrates the use of the sendAudio() API
+
+- Added show() command in SDK API
+        Use this command to skip through recordings frame by frame
+        
+Bug fixes:
+
+- Fixed: Data corruption in MxPEG_StreamInfo class
+- Fixed: Stream parsing error in MxPEG decoder
+- Fixed: Connection problem in guest mode (connecting without credentials)
+- Fixed: MxPEG_SDK_API::setAudioMode() 
+- Fixed: Replaced all assert statements in the SDK with std::runtime_error() exceptions
+- Fixed: Broken audio packages when sending audio to the camera
+
+
+Changes:
+
+- Updated player sample 
+        Added support for the show() command 
+        Displaying camera name/ip and recording timestamp of current frame as window title
+
+- Added default parameters for constructor of MxPEG_AudioFormat() 
+
+- Changed MxPEG_SDK API: Added an additional parameter to the MxPEG_SDK() constructor
+	Using this parameter, the client application can implement/provide its 
+	own network layer. This way the client can control the low-level network communication.
+	Using this mechanism, it is possible to add SSL encryption. A simple example - without 
+	encryption - was added to the player example.
+        By default, the SDK uses a polling approach to fetch new data each time the main loop is called. 
+        Using a custom network layer, you can switch this to an asynchronous mode. The player example 
+        also shows how to do this. 
+
+- Changed SDK loop Function return value: This is mainly useful for if the network module operates in 
+        asynchronous mode (see above). Returns true if there is more data in the input queues, 
+        false if the input queues are empty. Use this to decide whether to call loop right after it 
+        returns or to add a little delay before calling it again.
+
+- Added new API Function MxPEG_SDK::get_session_statistics() to retrieve internal statistics on the 
+        current session.  
+                
+- Added MxPEG_SDK API constructor using shared pointers 
+	The objects passed to the MxPEG_SDK constructor will no longer be deleted inside 
+	the SDK. The life cycle of these objects is now managed through std::shared_ptr()
+	See player example.
+
+- Added copy constructor in MxPEG_AudioFormat
+
+- Changed semantic of AudioSink::doGetTargetFormat()
+	If this function returns a null pointer, pass through mode will be
+	activated and all audio data from the camera will be passed to the
+	sink without any processing. 
+
+	The consume function of the sink needs to be able to handle mid-stream 
+	changes of the audio format.
+
+- Changed internal structures to support multiple instances of the SDK in one process. 
+	
+Release Version 1.0.0 - Initial release
