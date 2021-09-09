@@ -1,0 +1,11 @@
+# This is the build environment to produce the mobotix binary(s)
+FROM amd64/ubuntu:bionic-20200921
+
+RUN apt-get update && apt-get install -y \
+    gcc \
+    make \
+    g++
+
+ADD mobotix_sdk /build
+
+ENTRYPOINT ["/usr/bin/make", "-C", "/build/eventstreamclient/plugin-client/thermal-raw"]
