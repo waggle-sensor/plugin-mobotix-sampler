@@ -59,6 +59,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <time.h>
+#include <chrono>
 
 #if defined(_MSC_VER)
 #include <fcntl.h>
@@ -76,7 +77,7 @@ SinkVideo::~SinkVideo()
    std::cout << "Deleting SinkVideo" << std::endl;
 }
 
-void SinkVideo::writeThermalData(MxPEG_Image &buffer)
+void SinkVideo::writeThermalData(MxPEG_Image &buffer, uint64_t ts_ns)
 {
 
    std::shared_ptr<MX_ThermalRawData> rawData = buffer.fetchThermalRawData(MXT_Sensor::left);
@@ -87,26 +88,26 @@ void SinkVideo::writeThermalData(MxPEG_Image &buffer)
    if (rawData.get() != nullptr)
    {
       std::cout << "  Got thermal raw data from left sensor " << std::endl;
-      writeThermalRaw(rawData);
-      writeThermalRawIntCSV(rawData);
-      writeThermalCelsiusCSV(rawData);
+      writeThermalRaw(rawData, ts_ns);
+      writeThermalRawIntCSV(rawData, ts_ns);
+      writeThermalCelsiusCSV(rawData, ts_ns);
    }
 
    rawData = buffer.fetchThermalRawData(MXT_Sensor::right);
    if (rawData.get() != nullptr)
    {
       std::cout << "  Got thermal raw data from right sensor " << std::endl;
-      writeThermalRaw(rawData);
-      writeThermalRawIntCSV(rawData);
-      writeThermalCelsiusCSV(rawData);
+      writeThermalRaw(rawData, ts_ns);
+      writeThermalRawIntCSV(rawData, ts_ns);
+      writeThermalCelsiusCSV(rawData, ts_ns);
    }
 }
 
-bool SinkVideo::writeRBG(MxPEG_Image &buffer)
+bool SinkVideo::writeRBG(MxPEG_Image &buffer, uint64_t ts_ns)
 {
 
    char fname[1024];
-   snprintf(fname, 1024, "%s_%06u_%ux%u.rgb", m_name.c_str(), m_count, buffer.width(), buffer.height());
+   snprintf(fname, 1024, "%lu_%ux%u.rgb", ts_ns, buffer.width(), buffer.height());
    FILE *fVideoOut = NULL;
    fVideoOut = fopen(fname, "w");
 
@@ -136,13 +137,12 @@ bool SinkVideo::writeRBG(MxPEG_Image &buffer)
    return false;
 }
 
-bool SinkVideo::writeThermalRaw(std::shared_ptr<MX_ThermalRawData> rawData)
+bool SinkVideo::writeThermalRaw(std::shared_ptr<MX_ThermalRawData> rawData, uint64_t ts_ns)
 {
 
    char fname[1024];
-   snprintf(fname, 1024, "%s_%06u_%s_%ux%u_%s.thermal.raw",
-            m_name.c_str(),
-            m_count,
+   snprintf(fname, 1024, "%lu_%s_%ux%u_%s.thermal.raw",
+            ts_ns,
             ((rawData->sensor() == MXT_Sensor::left) ? "left" : "right"),
             rawData->width(),
             rawData->height(),
@@ -174,12 +174,11 @@ bool SinkVideo::writeThermalRaw(std::shared_ptr<MX_ThermalRawData> rawData)
    return true;
 }
 
-bool SinkVideo::writeThermalRawIntCSV(std::shared_ptr<MX_ThermalRawData> rawData)
+bool SinkVideo::writeThermalRawIntCSV(std::shared_ptr<MX_ThermalRawData> rawData, uint64_t ts_ns)
 {
    char fname[1024];
-   snprintf(fname, 1024, "%s_%06u_%s_%ux%u_%s.thermal.uint.csv",
-            m_name.c_str(),
-            m_count,
+   snprintf(fname, 1024, "%lu_%s_%ux%u_%s.thermal.uint.csv",
+            ts_ns,
             ((rawData->sensor() == MXT_Sensor::left) ? "left" : "right"),
             rawData->width(),
             rawData->height(),
@@ -245,7 +244,7 @@ bool SinkVideo::writeThermalRawIntCSV(std::shared_ptr<MX_ThermalRawData> rawData
    return true;
 }
 
-bool SinkVideo::writeThermalCelsiusCSV(std::shared_ptr<MX_ThermalRawData> rawData)
+bool SinkVideo::writeThermalCelsiusCSV(std::shared_ptr<MX_ThermalRawData> rawData, uint64_t ts_ns)
 {
 
    if (!rawData->advancedRadiometrySupport())
@@ -255,9 +254,8 @@ bool SinkVideo::writeThermalCelsiusCSV(std::shared_ptr<MX_ThermalRawData> rawDat
    }
 
    char fname[1024];
-   snprintf(fname, 1024, "%s_%06u_%s_%ux%u_%s.thermal.celsius.csv",
-            m_name.c_str(),
-            m_count,
+   snprintf(fname, 1024, "%lu_%s_%ux%u_%s.thermal.celsius.csv",
+            ts_ns,
             ((rawData->sensor() == MXT_Sensor::left) ? "left" : "right"),
             rawData->width(),
             rawData->height(),
@@ -314,20 +312,27 @@ MxPEG_ReturnCode SinkVideo::doConsumeVideo(MxPEG_Image::unique_ptr_t buffer)
    m_count++;
 
    /*
-    * get the timestamp for each frame - in this example only used for debug output
+    * get the timestamp for each frame (from the camera image) - in this example only used for debug output
     */
    uint64_t syncTime = buffer->creationTime().tv_sec;
    syncTime *= 1000000;
    syncTime += buffer->creationTime().tv_usec;
 
-   std::cout << "received video frame #" << m_count
-             << " type: " << ((buffer->mode() == MxPEG_ImageMode::im_YUV) ? "YUV" : "BGRA")
-             << " ts: " << syncTime << std::endl;
+   // get system time (in nanoseconds)
+   std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
+   auto duration = now.time_since_epoch();
+   uint64_t ts_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(duration).count();
+
+   std::cout
+       << "received video frame #" << m_count
+       << " type: " << ((buffer->mode() == MxPEG_ImageMode::im_YUV) ? "YUV" : "BGRA")
+       << " ts (camera): " << syncTime
+       << " ts (system): " << ts_ns << std::endl;
 
    //write the RGB image data
-   writeRBG(*buffer);
+   writeRBG(*buffer, ts_ns);
 
    //write the thermal data
-   writeThermalData(*buffer);
+   writeThermalData(*buffer, ts_ns);
    return er_Success;
 }

@@ -86,27 +86,27 @@ private:
    /*
     * Writes the image data of decoded to RGB (see main.cpp) to an output file. A new file is created for each frame.
     */
-   bool writeRBG(MxPEG_Image &buffer);
+   bool writeRBG(MxPEG_Image &buffer, uint64_t ts_ns);
 
    /*
     * Writes the thermal raw data that is included with each frame to an output file. Separate files are generated for each frame.
     * If multiple thermal sensors are connected to the camera, the output is written to separate files for each sensor.
     */
-   void writeThermalData(MxPEG_Image &buffer);
+   void writeThermalData(MxPEG_Image &buffer, uint64_t ts_ns);
 
    /*
     * Writes the thermal raw data as a binary blob to an output file.
     */
-   bool writeThermalRaw(std::shared_ptr<MX_ThermalRawData> rawData);
+   bool writeThermalRaw(std::shared_ptr<MX_ThermalRawData> rawData, uint64_t ts_ns);
    /*
     * Converts the thermal raw data to unsigned integer values for each pixel. Writes integer values to a csv file.
     */
-   bool writeThermalRawIntCSV(std::shared_ptr<MX_ThermalRawData> rawData);
+   bool writeThermalRawIntCSV(std::shared_ptr<MX_ThermalRawData> rawData, uint64_t ts_ns);
    /*
     * If supported (TR sensor in "Linear Mode"):
     * Converts the thermal raw data to degrees Celsius float values for each pixel. Writes integer values to a csv file.
     */
-   bool writeThermalCelsiusCSV(std::shared_ptr<MX_ThermalRawData> rawData);
+   bool writeThermalCelsiusCSV(std::shared_ptr<MX_ThermalRawData> rawData, uint64_t ts_ns);
 
    std::string m_name;
    uint32_t m_count;
