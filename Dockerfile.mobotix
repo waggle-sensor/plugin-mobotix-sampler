@@ -1,0 +1,35 @@
+# This is the build environment to produce the mobotix binary(s)
+## architecture specific source code setup
+# FROM ubuntu:bionic-20200921 AS src
+FROM arm64v8/ubuntu:bionic-20200921 AS src
+
+ADD mobotix_sdk /build
+RUN cd /build/eventstreamclient/plugin-client && \
+    ln -s toolchain.$(uname -m).cfg toolchain.cfg
+RUN cd /build/eventstreamclient/lib/Linux && \
+    ln -s libeventstreamclient.$(uname -m).a libeventstreamclient.a
+
+## we must build from an amd64 based machine (aarch64 is a cross-compile)
+FROM amd64/ubuntu:bionic-20200921 AS builder
+
+RUN apt-get update && apt-get install -y \
+    gcc \
+    g++ \
+    make \
+    wget \
+    xz-utils
+
+# add in the aarch64 cross compiler (for amd64 specific builds)
+ADD subbuild* /
+RUN /subbuild.aarch64.sh
+
+COPY --from=src /build /build
+RUN /usr/bin/make -C /build/eventstreamclient/plugin-client/thermal-raw
+
+FROM waggle/plugin-base:1.1.1-base
+COPY --from=builder /build/eventstreamclient/plugin-client/thermal-raw/build/thermal-raw /thermal-raw
+
+# COPY app.py requirements.txt /app/
+# RUN pip3 install --no-cache-dir -U -r /app/requirements.txt
+
+#ENTRYPOINT ["python3", "-u", "/app/app.py"]
