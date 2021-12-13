@@ -52,6 +52,8 @@
 #ifndef SAMPLE_AUTHORIZATIONHANDLER_H_
 #define SAMPLE_AUTHORIZATIONHANDLER_H_
 
+#include <string>
+
 #if defined(_MSC_VER)
 #include <Windows.h>
 #endif
@@ -64,7 +66,7 @@ using namespace ie::MxPEG;
 class AuthorizationHandler : public MxPEG_AuthorizationHandler
 {
 public:
-   AuthorizationHandler();
+   AuthorizationHandler(std::string username, std::string password);
 
    virtual ~AuthorizationHandler();
 
@@ -81,6 +83,10 @@ public:
    virtual unsigned int maxRetries();
 
    virtual bool reconnectOnAuthFail();
+
+private:
+   std::string m_username;
+   std::string m_password;
 };
 
 #endif /* SAMPLE_AUTHORIZATIONHANDLER_H_ */

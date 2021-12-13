@@ -82,24 +82,39 @@
 #include <memory>
 
 #define URL_SZ 256
+#define USERNAME_SZ 256
+#define PASSWORD_SZ 256
 
 using namespace ie::MxPEG;
 
+// Arguments
+//  url: ip address of camera
+//  user: username for login to camera
+//  password: password for username for login to camera
 int main(int argc, char **argv)
 {
    std::cout << "EventStream client SDK thermal raw data example" << std::endl;
 
-   if (argc < 2)
+   if (argc < 4)
    {
       std::cout << "Missing parameter hostname/IP" << std::endl;
-      std::cout << "Start with " << argv[0] << " [hostname|IP]" << std::endl;
+      std::cout << "Start with " << argv[0] << " [hostname|IP] [user] [password]" << std::endl;
       std::cout << "Press enter to exit" << std::endl;
       getchar();
       exit(1);
    }
 
+   // save the camera url/ip
    char url[URL_SZ] = "";
    snprintf(url, URL_SZ, "http://%s/control/eventstream.jpg", argv[1]);
+
+   // save the camera username
+   char username[USERNAME_SZ] = "";
+   snprintf(username, USERNAME_SZ, "%s", argv[2]);
+
+   // save the camera password
+   char password[PASSWORD_SZ] = "";
+   snprintf(password, PASSWORD_SZ, "%s", argv[3]);
 
 #ifdef _MSC_VER
    WSADATA wsaData;
@@ -125,7 +140,7 @@ int main(int argc, char **argv)
    /*
     * Create an authorization handler that provides the credentials (if needed)
     */
-   MxPEG_AuthorizationHandler::shared_ptr_t authHandler = MxPEG_AuthorizationHandler::shared_ptr_t(new AuthorizationHandler());
+   MxPEG_AuthorizationHandler::shared_ptr_t authHandler = MxPEG_AuthorizationHandler::shared_ptr_t(new AuthorizationHandler(username, password));
 
    /*
     * Create a notification listener to handle the json replies of the camera
