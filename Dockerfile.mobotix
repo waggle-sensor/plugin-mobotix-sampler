@@ -1,0 +1,25 @@
+# This is the build environment to produce the mobotix binary(s)
+FROM ubuntu:bionic-20200921 AS builder
+# FROM arm64v8/ubuntu:bionic-20200921 AS src
+
+RUN apt-get update && apt-get install -y \
+    file \
+    gcc \
+    g++ \
+    make \
+    wget
+
+ADD mobotix_sdk /build
+RUN cd /build/eventstreamclient/lib/Linux && \
+    ln -s libeventstreamclient.$(uname -m).a libeventstreamclient.a
+
+RUN /usr/bin/make -C /build/eventstreamclient/plugin-client/thermal-raw
+
+FROM waggle/plugin-base:1.1.1-base
+COPY --from=builder /build/eventstreamclient/plugin-client/thermal-raw/build/thermal-raw /thermal-raw
+
+# TODO:
+# COPY app.py requirements.txt /app/
+# RUN pip3 install --no-cache-dir -U -r /app/requirements.txt
+
+# ENTRYPOINT ["python3", "-u", "/app/app.py"]
