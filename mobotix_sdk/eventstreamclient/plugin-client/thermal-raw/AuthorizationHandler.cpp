@@ -51,9 +51,11 @@
 
 #include "AuthorizationHandler.h"
 #include <iostream>
+#include <string>
 #include <string.h>
 
-AuthorizationHandler::AuthorizationHandler()
+AuthorizationHandler::AuthorizationHandler(std::string username, std::string password)
+    : m_username(username), m_password(password)
 {
    std::cout << "Creating AuthorizationHandler" << std::endl;
 }
@@ -65,13 +67,13 @@ AuthorizationHandler::~AuthorizationHandler()
 
 bool AuthorizationHandler::getUserName(char *buf, size_t bufSz)
 {
-   snprintf(buf, bufSz, "admin");
+   snprintf(buf, bufSz, "%s", m_username.c_str());
    return true;
 }
 
 bool AuthorizationHandler::getPassword(char *buf, size_t bufSz)
 {
-   snprintf(buf, bufSz, "meinsm");
+   snprintf(buf, bufSz, "%s", m_password.c_str());
    return true;
 }
 
