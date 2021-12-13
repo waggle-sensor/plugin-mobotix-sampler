@@ -8,4 +8,5 @@ RUN apt-get update && apt-get install -y \
 
 ADD mobotix_sdk /build
 
-ENTRYPOINT ["/usr/bin/make", "-C", "/build/eventstreamclient/plugin-client/thermal-raw"]
+RUN /usr/bin/make -C /build/eventstreamclient/plugin-client/thermal-raw
+RUN cp /build/eventstreamclient/plugin-client/thermal-raw/build/thermal-raw /thermal-raw
