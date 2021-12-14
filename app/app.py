@@ -55,11 +55,11 @@ def cleanup():
     all_files = glob.glob("*")
     for f in all_files:
         print("Removing "+f)
-        os.remove(f)
+        #os.remove(f)
 
 
 
-@timeout_decorator.timeout(30)
+@timeout_decorator.timeout(300)
 def run(args):
     r=["/thermal-raw", "--url", args.ip, "--user", args.id,
                         "--password", args.pw, "--dir", args.o]
@@ -87,7 +87,11 @@ def main(args):
     
     while True:
         # Run the Mobotix sampler
-        run(args)
+        try:
+            run(args)
+        except timeout_decorator.timeout_decorator.TimeoutError:
+            print("timeout")
+            pass
 
         convertRGBtoJPG()
         filenames, timestamp = renameFiles()
