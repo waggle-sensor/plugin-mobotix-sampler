@@ -78,14 +78,15 @@
 #include "AuthorizationHandler.h"
 #include "NotificationListener.h"
 
+#include <boost/program_options.hpp>
+
 #include <iostream>
 #include <memory>
 
 #define URL_SZ 256
-#define USERNAME_SZ 256
-#define PASSWORD_SZ 256
 
 using namespace ie::MxPEG;
+namespace po = boost::program_options;
 
 // Arguments
 //  url: ip address of camera
@@ -93,28 +94,33 @@ using namespace ie::MxPEG;
 //  password: password for username for login to camera
 int main(int argc, char **argv)
 {
+   std::string op_url;
+   std::string op_user;
+   std::string op_password;
+   std::string op_datadir;
+
    std::cout << "Waggle: EventStream client SDK thermal raw data collector" << std::endl;
 
-   if (argc < 4)
-   {
-      std::cout << "Missing parameter hostname/IP" << std::endl;
-      std::cout << "Start with " << argv[0] << " [hostname|IP] [user] [password]" << std::endl;
-      std::cout << "Press enter to exit" << std::endl;
-      getchar();
-      exit(1);
-   }
+   po::options_description desc("Options for my program");
+   desc.add_options()(
+       "url,l", po::value<std::string>(&op_url)->required(), "Camera URL/IP address")(
+       "user,u", po::value<std::string>(&op_user)->default_value("admin"), "Camera API access username")(
+       "password,p", po::value<std::string>(&op_password)->default_value("meinsm"), "Camera API access password")(
+       "dir,d", po::value<std::string>(&op_datadir)->default_value("data"), "Single directory to store collected data files");
+
+   po::variables_map vm;
+   po::store(po::parse_command_line(argc, argv, desc), vm);
+   po::notify(vm);
 
    // save the camera url/ip
    char url[URL_SZ] = "";
-   snprintf(url, URL_SZ, "http://%s/control/eventstream.jpg", argv[1]);
+   snprintf(url, URL_SZ, "http://%s/control/eventstream.jpg", op_url.c_str());
 
-   // save the camera username
-   char username[USERNAME_SZ] = "";
-   snprintf(username, USERNAME_SZ, "%s", argv[2]);
-
-   // save the camera password
-   char password[PASSWORD_SZ] = "";
-   snprintf(password, PASSWORD_SZ, "%s", argv[3]);
+   std::cout << "Execution parameters" << std::endl
+             << " url:       " << op_url << std::endl
+             << " user:      " << op_user << std::endl
+             << " password:  " << op_password << std::endl
+             << " data dir:  " << op_datadir << std::endl;
 
 #ifdef _MSC_VER
    WSADATA wsaData;
@@ -130,7 +136,7 @@ int main(int argc, char **argv)
    /*
     * Create a video sink object to process the decoded video frames
     */
-   MxPEG_SinkVideo::shared_ptr_t sinkVideo = MxPEG_SinkVideo::shared_ptr_t(new SinkVideo());
+   MxPEG_SinkVideo::shared_ptr_t sinkVideo = MxPEG_SinkVideo::shared_ptr_t(new SinkVideo(op_datadir.c_str()));
 
    /*
     * Create an audio sink object to process the received audio packages
@@ -140,7 +146,7 @@ int main(int argc, char **argv)
    /*
     * Create an authorization handler that provides the credentials (if needed)
     */
-   MxPEG_AuthorizationHandler::shared_ptr_t authHandler = MxPEG_AuthorizationHandler::shared_ptr_t(new AuthorizationHandler(username, password));
+   MxPEG_AuthorizationHandler::shared_ptr_t authHandler = MxPEG_AuthorizationHandler::shared_ptr_t(new AuthorizationHandler(op_user.c_str(), op_password.c_str()));
 
    /*
     * Create a notification listener to handle the json replies of the camera

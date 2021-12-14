@@ -71,6 +71,7 @@ INCLUDE_DIR := $(SDK_DIR)/include
 
 LIB_DIR := $(SDK_DIR)/lib/$(OS)
 LIB_EV_CLIENT := eventstreamclient
+LIB_BOOST := -lboost_program_options
 
 CXXFLAGS += -I$(INCLUDE_DIR) -std=c++11 -Wall -ggdb 
 
@@ -81,7 +82,7 @@ clean:
 
 $(BIN): $(OBJS)
 	@echo '##Building file: $<'
-	$(CXX) $(CXXFLAGS) -o $(BUILD)/$(BIN) $(OBJS) -L$(LIB_DIR) -l$(LIB_EV_CLIENT)
+	$(CXX) $(CXXFLAGS) -o $(BUILD)/$(BIN) $(OBJS) -L$(LIB_DIR) -l$(LIB_EV_CLIENT) $(LIB_BOOST)
 	@echo '##Finished building: $<'
 
 $(BUILD):

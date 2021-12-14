@@ -72,7 +72,7 @@ public:
    /*
     * Constructor of the sample sink.
     */
-   SinkVideo();
+   SinkVideo(const std::string outDir = "data");
 
    virtual ~SinkVideo();
 
@@ -110,7 +110,7 @@ private:
 
    uint32_t m_count;
    const std::string m_tmp_dir = "_temp";
-   const std::string m_data_dir = "data";
+   std::string m_data_dir;
    std::vector<std::string> m_tmp_files;
 };
 
