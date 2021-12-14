@@ -67,10 +67,10 @@
 #include <io.h>
 #endif
 
-SinkVideo::SinkVideo(std::string outName)
-    : m_name(outName), m_count(0)
+SinkVideo::SinkVideo()
+    : m_count(0)
 {
-   std::cout << "Creating SinkVideo using " << outName << " as basename for frames and thermal raw data" << std::endl;
+   std::cout << "Creating SinkVideo for frames and thermal raw data" << std::endl;
 }
 
 SinkVideo::~SinkVideo()

@@ -130,7 +130,7 @@ int main(int argc, char **argv)
    /*
     * Create a video sink object to process the decoded video frames
     */
-   MxPEG_SinkVideo::shared_ptr_t sinkVideo = MxPEG_SinkVideo::shared_ptr_t(new SinkVideo("stream"));
+   MxPEG_SinkVideo::shared_ptr_t sinkVideo = MxPEG_SinkVideo::shared_ptr_t(new SinkVideo());
 
    /*
     * Create an audio sink object to process the received audio packages
