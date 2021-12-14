@@ -1,6 +1,5 @@
 # This is the build environment to produce the mobotix binary(s)
 FROM ubuntu:focal-20211006 AS builder
-# FROM arm64v8/ubuntu:bionic-20200921 AS src
 
 ENV DEBIAN_FRONTEND=noninteractive
 
