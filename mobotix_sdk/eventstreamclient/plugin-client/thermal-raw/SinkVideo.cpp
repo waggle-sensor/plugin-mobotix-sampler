@@ -67,8 +67,8 @@
 #include <io.h>
 #endif
 
-SinkVideo::SinkVideo()
-    : m_count(0)
+SinkVideo::SinkVideo(const std::string outDir)
+    : m_count(0), m_data_dir(outDir)
 {
    std::cout << "Creating SinkVideo for frames and thermal raw data" << std::endl;
 }

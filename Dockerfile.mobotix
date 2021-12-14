@@ -6,7 +6,8 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y \
     gcc \
     g++ \
-    make
+    make \
+    libboost-all-dev
 
 ADD mobotix_sdk /build
 RUN cd /build/eventstreamclient/lib/Linux && \
@@ -15,6 +16,11 @@ RUN cd /build/eventstreamclient/lib/Linux && \
 RUN /usr/bin/make -C /build/eventstreamclient/plugin-client/thermal-raw
 
 FROM waggle/plugin-base:1.1.1-base
+
+# install library dependencies
+RUN apt-get update && apt-get install -y \
+    libboost-program-options1.71.0
+
 COPY --from=builder /build/eventstreamclient/plugin-client/thermal-raw/build/thermal-raw /thermal-raw
 
 # TODO:
