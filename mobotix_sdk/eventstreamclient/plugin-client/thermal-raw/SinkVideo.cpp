@@ -59,11 +59,19 @@
 #include <assert.h>
 #include <stdio.h>
 #include <time.h>
+#include <sys/stat.h>
 
 #if defined(_MSC_VER)
 #include <fcntl.h>
 #include <io.h>
 #endif
+
+void setupWorkAndDataPaths(char *workPath, char *dataPath, size_t size, const char *fname) {
+   mkdir("work", 0755);
+   snprintf(workPath, size, "%s/%s", "work", fname);
+   mkdir("data", 0755);
+   snprintf(dataPath, size, "%s/%s", "data", fname);
+}
 
 SinkVideo::SinkVideo(std::string outName)
     : m_name(outName), m_count(0)
@@ -104,11 +112,15 @@ void SinkVideo::writeThermalData(MxPEG_Image &buffer)
 
 bool SinkVideo::writeRBG(MxPEG_Image &buffer)
 {
-
-   char fname[1024];
-   snprintf(fname, 1024, "%s_%06u_%ux%u.rgb", m_name.c_str(), m_count, buffer.width(), buffer.height());
+   char workPath[1024];
+   char dataPath[1024];
+   {
+      char fname[1024];
+      snprintf(fname, 1024, "%s_%06u_%ux%u.rgb", m_name.c_str(), m_count, buffer.width(), buffer.height());
+      setupWorkAndDataPaths(workPath, dataPath, 1024, fname);
+   }
    FILE *fVideoOut = NULL;
-   fVideoOut = fopen(fname, "w");
+   fVideoOut = fopen(workPath, "w");
 
 #if defined(_MSC_VER)
    //for windows set the out stream to binary mode
@@ -130,6 +142,7 @@ bool SinkVideo::writeRBG(MxPEG_Image &buffer)
                    << (int)buffer.height() << std::endl;
       }
       fclose(fVideoOut);
+      rename(workPath, dataPath);
       return true;
    }
 
@@ -138,17 +151,24 @@ bool SinkVideo::writeRBG(MxPEG_Image &buffer)
 
 bool SinkVideo::writeThermalRaw(std::shared_ptr<MX_ThermalRawData> rawData)
 {
+   char workPath[1024];
+   char dataPath[1024];
 
-   char fname[1024];
-   snprintf(fname, 1024, "%s_%06u_%s_%ux%u_%s.thermal.raw",
-            m_name.c_str(),
-            m_count,
-            ((rawData->sensor() == MXT_Sensor::left) ? "left" : "right"),
-            rawData->width(),
-            rawData->height(),
-            ((rawData->bitDepth() == MXT_BitDepth::depth14bit) ? "14bit" : "unknown"));
+   {
+      char fname[1024];
+      snprintf(fname, 1024, "%s_%06u_%s_%ux%u_%s.thermal.raw",
+               m_name.c_str(),
+               m_count,
+               ((rawData->sensor() == MXT_Sensor::left) ? "left" : "right"),
+               rawData->width(),
+               rawData->height(),
+               ((rawData->bitDepth() == MXT_BitDepth::depth14bit) ? "14bit" : "unknown"));
+      setupWorkAndDataPaths(workPath, dataPath, 1024, fname);
+   }
+
    FILE *fVideoOut = NULL;
-   fVideoOut = fopen(fname, "w");
+
+   fVideoOut = fopen(workPath, "w");
 
    if (fVideoOut == nullptr)
    {
@@ -171,21 +191,28 @@ bool SinkVideo::writeThermalRaw(std::shared_ptr<MX_ThermalRawData> rawData)
    std::cout << "  -> wrote thermal raw data of sensor " << (int)rawData->sensor() << " " << rawBufferSize << " bytes, res: " << (int)rawData->width() << "x"
              << (int)rawData->height() << std::endl;
    fclose(fVideoOut);
+   rename(workPath, dataPath);
    return true;
 }
 
 bool SinkVideo::writeThermalRawIntCSV(std::shared_ptr<MX_ThermalRawData> rawData)
 {
-   char fname[1024];
-   snprintf(fname, 1024, "%s_%06u_%s_%ux%u_%s.thermal.uint.csv",
-            m_name.c_str(),
-            m_count,
-            ((rawData->sensor() == MXT_Sensor::left) ? "left" : "right"),
-            rawData->width(),
-            rawData->height(),
-            ((rawData->bitDepth() == MXT_BitDepth::depth14bit) ? "14bit" : "unknown"));
+   char workPath[1024];
+   char dataPath[1024];
+   {
+      char fname[1024];
+      snprintf(fname, 1024, "%s_%06u_%s_%ux%u_%s.thermal.uint.csv",
+               m_name.c_str(),
+               m_count,
+               ((rawData->sensor() == MXT_Sensor::left) ? "left" : "right"),
+               rawData->width(),
+               rawData->height(),
+               ((rawData->bitDepth() == MXT_BitDepth::depth14bit) ? "14bit" : "unknown"));
+      setupWorkAndDataPaths(workPath, dataPath, 1024, fname);
+   }
+
    FILE *fVideoOut = NULL;
-   fVideoOut = fopen(fname, "w");
+   fVideoOut = fopen(workPath, "w");
 
    if (fVideoOut == nullptr)
    {
@@ -242,6 +269,7 @@ bool SinkVideo::writeThermalRawIntCSV(std::shared_ptr<MX_ThermalRawData> rawData
    std::cout << "  -> converted thermal raw data of sensor " << (int)rawData->sensor() << " to integer csv file " << std::endl;
 
    fclose(fVideoOut);
+   rename(workPath, dataPath);
    return true;
 }
 
@@ -254,16 +282,22 @@ bool SinkVideo::writeThermalCelsiusCSV(std::shared_ptr<MX_ThermalRawData> rawDat
       return false;
    }
 
-   char fname[1024];
-   snprintf(fname, 1024, "%s_%06u_%s_%ux%u_%s.thermal.celsius.csv",
-            m_name.c_str(),
-            m_count,
-            ((rawData->sensor() == MXT_Sensor::left) ? "left" : "right"),
-            rawData->width(),
-            rawData->height(),
-            ((rawData->bitDepth() == MXT_BitDepth::depth14bit) ? "14bit" : "unknown"));
+   char workPath[1024];
+   char dataPath[1024];
+   {
+      char fname[1024];
+      snprintf(fname, 1024, "%s_%06u_%s_%ux%u_%s.thermal.celsius.csv",
+               m_name.c_str(),
+               m_count,
+               ((rawData->sensor() == MXT_Sensor::left) ? "left" : "right"),
+               rawData->width(),
+               rawData->height(),
+               ((rawData->bitDepth() == MXT_BitDepth::depth14bit) ? "14bit" : "unknown"));
+      setupWorkAndDataPaths(workPath, dataPath, 1024, fname);
+   }
+
    FILE *fVideoOut = NULL;
-   fVideoOut = fopen(fname, "w");
+   fVideoOut = fopen(workPath, "w");
 
    if (fVideoOut == nullptr)
    {
@@ -305,6 +339,7 @@ bool SinkVideo::writeThermalCelsiusCSV(std::shared_ptr<MX_ThermalRawData> rawDat
    std::cout << "  -> converted thermal raw data of sensor " << (int)rawData->sensor() << " to Celsius csv file " << std::endl;
 
    fclose(fVideoOut);
+   rename(workPath, dataPath);
    return true;
 }
 
