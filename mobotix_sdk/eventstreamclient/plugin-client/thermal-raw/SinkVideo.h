@@ -110,6 +110,9 @@ private:
 
    std::string m_name;
    uint32_t m_count;
+   const std::string m_tmp_dir = "_temp";
+   const std::string m_data_dir = "data";
+   std::vector<std::string> m_tmp_files;
 };
 
 #endif /* SAMPLE_SINKVIDEO_H_ */

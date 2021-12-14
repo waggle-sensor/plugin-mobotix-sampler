@@ -60,6 +60,7 @@
 #include <stdio.h>
 #include <time.h>
 #include <chrono>
+#include <sys/stat.h>
 
 #if defined(_MSC_VER)
 #include <fcntl.h>
@@ -107,9 +108,11 @@ bool SinkVideo::writeRBG(MxPEG_Image &buffer, uint64_t ts_ns)
 {
 
    char fname[1024];
+   char fpath[1024 + sizeof(m_tmp_dir) + 1];
    snprintf(fname, 1024, "%lu_%ux%u.rgb", ts_ns, buffer.width(), buffer.height());
+   snprintf(fpath, sizeof(fpath), "%s/%s", m_tmp_dir.c_str(), fname);
    FILE *fVideoOut = NULL;
-   fVideoOut = fopen(fname, "w");
+   fVideoOut = fopen(fpath, "w");
 
 #if defined(_MSC_VER)
    //for windows set the out stream to binary mode
@@ -131,6 +134,7 @@ bool SinkVideo::writeRBG(MxPEG_Image &buffer, uint64_t ts_ns)
                    << (int)buffer.height() << std::endl;
       }
       fclose(fVideoOut);
+      m_tmp_files.push_back(fname);
       return true;
    }
 
@@ -141,14 +145,16 @@ bool SinkVideo::writeThermalRaw(std::shared_ptr<MX_ThermalRawData> rawData, uint
 {
 
    char fname[1024];
+   char fpath[1024 + sizeof(m_tmp_dir) + 1];
    snprintf(fname, 1024, "%lu_%s_%ux%u_%s.thermal.raw",
             ts_ns,
             ((rawData->sensor() == MXT_Sensor::left) ? "left" : "right"),
             rawData->width(),
             rawData->height(),
             ((rawData->bitDepth() == MXT_BitDepth::depth14bit) ? "14bit" : "unknown"));
+   snprintf(fpath, sizeof(fpath), "%s/%s", m_tmp_dir.c_str(), fname);
    FILE *fVideoOut = NULL;
-   fVideoOut = fopen(fname, "w");
+   fVideoOut = fopen(fpath, "w");
 
    if (fVideoOut == nullptr)
    {
@@ -171,20 +177,23 @@ bool SinkVideo::writeThermalRaw(std::shared_ptr<MX_ThermalRawData> rawData, uint
    std::cout << "  -> wrote thermal raw data of sensor " << (int)rawData->sensor() << " " << rawBufferSize << " bytes, res: " << (int)rawData->width() << "x"
              << (int)rawData->height() << std::endl;
    fclose(fVideoOut);
+   m_tmp_files.push_back(fname);
    return true;
 }
 
 bool SinkVideo::writeThermalRawIntCSV(std::shared_ptr<MX_ThermalRawData> rawData, uint64_t ts_ns)
 {
    char fname[1024];
+   char fpath[1024 + sizeof(m_tmp_dir) + 1];
    snprintf(fname, 1024, "%lu_%s_%ux%u_%s.thermal.uint.csv",
             ts_ns,
             ((rawData->sensor() == MXT_Sensor::left) ? "left" : "right"),
             rawData->width(),
             rawData->height(),
             ((rawData->bitDepth() == MXT_BitDepth::depth14bit) ? "14bit" : "unknown"));
+   snprintf(fpath, sizeof(fpath), "%s/%s", m_tmp_dir.c_str(), fname);
    FILE *fVideoOut = NULL;
-   fVideoOut = fopen(fname, "w");
+   fVideoOut = fopen(fpath, "w");
 
    if (fVideoOut == nullptr)
    {
@@ -241,6 +250,7 @@ bool SinkVideo::writeThermalRawIntCSV(std::shared_ptr<MX_ThermalRawData> rawData
    std::cout << "  -> converted thermal raw data of sensor " << (int)rawData->sensor() << " to integer csv file " << std::endl;
 
    fclose(fVideoOut);
+   m_tmp_files.push_back(fname);
    return true;
 }
 
@@ -254,14 +264,16 @@ bool SinkVideo::writeThermalCelsiusCSV(std::shared_ptr<MX_ThermalRawData> rawDat
    }
 
    char fname[1024];
+   char fpath[1024 + sizeof(m_tmp_dir) + 1];
    snprintf(fname, 1024, "%lu_%s_%ux%u_%s.thermal.celsius.csv",
             ts_ns,
             ((rawData->sensor() == MXT_Sensor::left) ? "left" : "right"),
             rawData->width(),
             rawData->height(),
             ((rawData->bitDepth() == MXT_BitDepth::depth14bit) ? "14bit" : "unknown"));
+   snprintf(fpath, sizeof(fpath), "%s/%s", m_tmp_dir.c_str(), fname);
    FILE *fVideoOut = NULL;
-   fVideoOut = fopen(fname, "w");
+   fVideoOut = fopen(fpath, "w");
 
    if (fVideoOut == nullptr)
    {
@@ -303,6 +315,7 @@ bool SinkVideo::writeThermalCelsiusCSV(std::shared_ptr<MX_ThermalRawData> rawDat
    std::cout << "  -> converted thermal raw data of sensor " << (int)rawData->sensor() << " to Celsius csv file " << std::endl;
 
    fclose(fVideoOut);
+   m_tmp_files.push_back(fname);
    return true;
 }
 
@@ -329,10 +342,27 @@ MxPEG_ReturnCode SinkVideo::doConsumeVideo(MxPEG_Image::unique_ptr_t buffer)
        << " ts (camera): " << syncTime
        << " ts (system): " << ts_ns << std::endl;
 
+   // create temporay directory (if it doesn't exist) for in-progress files
+   mkdir(m_tmp_dir.c_str(), 0755);
+
    //write the RGB image data
    writeRBG(*buffer, ts_ns);
 
    //write the thermal data
    writeThermalData(*buffer, ts_ns);
+
+   // move all files from temporary directory to final directory
+   mkdir(m_data_dir.c_str(), 0755);
+   std::cout << "  Saving files to ./" << m_data_dir.c_str() << std::endl;
+   for (auto &file : m_tmp_files)
+   {
+      char tempPath[1024];
+      char dataPath[1024];
+      snprintf(tempPath, 1024, "%s/%s", m_tmp_dir.c_str(), file.c_str());
+      snprintf(dataPath, 1024, "%s/%s", m_data_dir.c_str(), file.c_str());
+      rename(tempPath, dataPath);
+   }
+   m_tmp_files.clear();
+
    return er_Success;
 }
