@@ -12,6 +12,8 @@ import glob
 import os
 import subprocess
 import re
+from select import select
+import timeout_decorator
 
 
 from waggle.plugin import Plugin
@@ -56,6 +58,24 @@ def cleanup():
         os.remove(f)
 
 
+
+@timeout_decorator.timeout(30)
+def run(args):
+    r=["/thermal-raw", "--url", args.ip, "--user", args.id,
+                        "--password", args.pw, "--dir", args.o]
+    with subprocess.Popen(r, stdout=subprocess.PIPE) as process:
+        while True:
+            pollresults = select([process.stdout], [], [], 5)[0]
+            if pollresults:
+                output = pollresults[0].readline()
+                if output:
+                    m = re.search("frame\s#(\d+)", output.strip().decode())
+                    print(output.strip().decode())
+                    if m and int(m.groups()[0]) >= args.i:
+                        print("DONE")
+                        return
+
+
 def main(args):
         
     #create output directory if it does not exist and change WD.
@@ -67,8 +87,7 @@ def main(args):
     
     while True:
         # Run the Mobotix sampler
-        subprocess.run(["/eventstreamclient/samples/thermal-raw/build/thermal-raw", 
-                            args.ip]) #, args.id, args.pw])
+        run(args)
 
         convertRGBtoJPG()
         filenames, timestamp = renameFiles()
@@ -103,7 +122,7 @@ if __name__ == "__main__":
     parser.add_argument('--o', type=str, 
                         help='Output directory', default="./data/")
     parser.add_argument('--i', type=int,
-                        help='Interval [sec] (Unused)', default=1)
+                        help='Interval/Frame [sec]', default=30)
     
     args = parser.parse_args()
     main(args)
