@@ -70,9 +70,9 @@ class SinkVideo : public MxPEG_SinkVideo
 {
 public:
    /*
-    * Constructor of the sample sink, takes the base name for the files generated as parameter.
+    * Constructor of the sample sink.
     */
-   SinkVideo(std::string outName);
+   SinkVideo();
 
    virtual ~SinkVideo();
 
@@ -108,7 +108,6 @@ private:
     */
    bool writeThermalCelsiusCSV(std::shared_ptr<MX_ThermalRawData> rawData, uint64_t ts_ns);
 
-   std::string m_name;
    uint32_t m_count;
    const std::string m_tmp_dir = "_temp";
    const std::string m_data_dir = "data";
