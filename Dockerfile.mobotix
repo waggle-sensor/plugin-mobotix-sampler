@@ -4,11 +4,9 @@ FROM ubuntu:focal-20211006 AS builder
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && apt-get install -y \
-    file \
     gcc \
     g++ \
-    make \
-    wget
+    make
 
 ADD mobotix_sdk /build
 RUN cd /build/eventstreamclient/lib/Linux && \
