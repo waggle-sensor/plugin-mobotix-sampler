@@ -93,7 +93,7 @@ using namespace ie::MxPEG;
 //  password: password for username for login to camera
 int main(int argc, char **argv)
 {
-   std::cout << "EventStream client SDK thermal raw data example" << std::endl;
+   std::cout << "Waggle: EventStream client SDK thermal raw data collector" << std::endl;
 
    if (argc < 4)
    {
