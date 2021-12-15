@@ -10,6 +10,7 @@ import argparse
 import glob
 import logging
 import os
+from pathlib import Path
 import re
 import shutil
 import subprocess
@@ -22,14 +23,11 @@ from waggle.plugin import Plugin
 DEFAULT_CAMERA_TIMEOUT = 120
 
 
-def convertRGBtoJPG():
-    rgb_files = glob.glob("*.rgb")
-    for f_rgb in rgb_files:
-        # make JPEG file name
-        f_jpg = f_rgb.replace(".rgb", ".jpg")
+def convertRGBtoJPG(fname_rgb):
+        fname_jpg = fname_rgb.replace(".rgb", ".jpg")
 
         # get the Width and Height of the image from filename
-        match_str = re.search("\d+x\d+", f_rgb)
+        match_str = re.search("\d+x\d+", fname_rgb)
         image_dims = match_str.group()
         subprocess.run(
             [
@@ -41,30 +39,30 @@ def convertRGBtoJPG():
                 "-video_size",
                 image_dims,
                 "-i",
-                f_rgb,
-                f_jpg,
+                fname_rgb,
+                fname_jpg,
             ],
             check=True
         )
 
-        logging.debug("Removing " + f_rgb)
-        os.remove(f_rgb)
+        logging.debug("Removing " + fname_rgb)
+        os.remove(fname_rgb)
+        return fname_jpg
 
 
-def renameFiles():
-    files = sum([glob.glob(f) for f in ("*.raw", "*.jpg", "*.csv")], [])
-    timestamp = []
-    new_filenames = []
-    for f in files:
-        timestamp_str, filename = f.split("_", 1)
+def renameFiles(f):
+    fname = os.path.basename(f)
+    dirname = os.path.dirname(f)
+    
+    timestamp_str, filename = fname.split("_", 1)
+    filename = os.path.join(dirname, filename)
+    timestamp = int(timestamp_str)
 
-        timestamp.append(int(timestamp_str))
-        new_filenames.append(filename)
+    logging.debug("Renaming " + f)
+    
+    os.rename(f, filename)
 
-        logging.debug("Renaming " + f)
-        os.rename(f, filename)
-
-    return new_filenames, timestamp
+    return filename, timestamp
 
 
 @timeout_decorator.timeout(DEFAULT_CAMERA_TIMEOUT)
@@ -103,14 +101,22 @@ def main(args):
             except timeout_decorator.timeout_decorator.TimeoutError:
                 logging.warning(f"Timed out attempting to capture {args.frames} frames.")
                 pass
+            
+            files = glob.glob(os.path.join(args.workdir, "*"))
 
-            convertRGBtoJPG()
-            filenames, timestamp = renameFiles()
 
-            for index, filename in enumerate(filenames):
+            #for index, filename in enumerate(filenames):
+                        
+            for file in files:
+                if Path(file).suffix == '.rgb':
+                    file = convertRGBtoJPG(file)
+                    
+                filename, timestamp = renameFiles(file)
+                
                 logging.debug(filename)
-                logging.debug(timestamp[index])
-                plugin.upload_file(filename, timestamp=timestamp[index])
+                logging.debug(timestamp)
+                
+                plugin.upload_file(filename, timestamp=timestamp)
             break
 
 
