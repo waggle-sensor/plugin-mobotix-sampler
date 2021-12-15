@@ -8,6 +8,7 @@ Created on Mon Dec 13 11:05:11 2021
 
 import argparse
 import glob
+import logging
 import os
 import re
 import shutil
@@ -42,7 +43,7 @@ def convertRGBtoJPG():
             ]
         )
 
-        print("Removing " + f_rgb)
+        logging.debug("Removing " + f_rgb)
         os.remove(f_rgb)
 
 
@@ -56,7 +57,7 @@ def renameFiles():
         timestamp.append(int(timestamp_str))
         new_filenames.append(filename)
 
-        print("Renaming " + f)
+        logging.debug("Renaming " + f)
         os.rename(f, filename)
 
     return new_filenames, timestamp
@@ -65,7 +66,7 @@ def renameFiles():
 def cleanup():
     all_files = glob.glob("*")
     for f in all_files:
-        print("Removing " + f)
+        logging.debug("Removing " + f)
         try:
             os.remove(f)
         except IsADirectoryError:
@@ -93,9 +94,9 @@ def run(args):
                 output = pollresults[0].readline()
                 if output:
                     m = re.search("frame\s#(\d+)", output.strip().decode())
-                    print(output.strip().decode())
+                    logging.info(output.strip().decode())
                     if m and int(m.groups()[0]) > args.frames:
-                        print("DONE")
+                        logging.info("Max frame count reached, closing camera capture")
                         return
 
 
@@ -113,15 +114,15 @@ def main(args):
             try:
                 run(args)
             except timeout_decorator.timeout_decorator.TimeoutError:
-                print("timeout")
+                logging.warning(f"Timed out attempting to capture {args.frames} frames.")
                 pass
 
             convertRGBtoJPG()
             filenames, timestamp = renameFiles()
 
             for index, filename in enumerate(filenames):
-                print(filename)
-                print(timestamp[index])
+                logging.debug(filename)
+                logging.debug(timestamp[index])
                 plugin.upload_file(filename, timestamp=timestamp[index])
 
             cleanup()
@@ -135,6 +136,7 @@ if __name__ == "__main__":
                                      This program runs Mobotix sampler for raw 
                                      storing thermal data."""
     )
+    parser.add_argument("--debug", action="store_true", help="enable debug logs")
     parser.add_argument(
         "--ip",
         required=True,
@@ -178,4 +180,11 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     args.frames = 1  # Hardcoded to avoid overwritting issue for now.
+
+    logging.basicConfig(
+        level=logging.DEBUG if args.debug else logging.INFO,
+        format="%(asctime)s %(message)s",
+        datefmt="%Y/%m/%d %H:%M:%S",
+    )
+
     main(args)
