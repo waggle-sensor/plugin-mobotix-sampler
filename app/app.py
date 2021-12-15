@@ -110,14 +110,13 @@ def main(args):
                 logging.debug(filename)
                 logging.debug(timestamp[index])
                 plugin.upload_file(filename, timestamp=timestamp[index])
-
-
-            exit()
+                
+            break
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="This program runs Mobotix sampler for raw storing thermal data."
+        description="The plugin runs Mobotix sampler and collects raw thermal data."
     )
     parser.add_argument("--debug", action="store_true", help="enable debug logs")
     parser.add_argument(
