@@ -15,6 +15,7 @@ RUN cd /build/eventstreamclient/lib/Linux && \
 
 RUN /usr/bin/make -C /build/eventstreamclient/plugin-client/thermal-raw
 
+# Running docker image
 FROM waggle/plugin-base:1.1.1-base
 
 COPY requirements.txt /app/
@@ -29,8 +30,3 @@ COPY --from=builder /build/eventstreamclient/plugin-client/thermal-raw/build/the
 
 COPY app /app/
 
-# TODO:
-# COPY app.py requirements.txt /app/
-# RUN pip3 install --no-cache-dir -U -r /app/requirements.txt
-
-# ENTRYPOINT ["python3", "-u", "/app/app.py"]
