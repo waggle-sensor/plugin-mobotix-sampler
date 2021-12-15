@@ -135,9 +135,7 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="""
-                                     This program runs Mobotix sampler for raw 
-                                     storing thermal data."""
+        description="This program runs Mobotix sampler for raw storing thermal data."
     )
     parser.add_argument("--debug", action="store_true", help="enable debug logs")
     parser.add_argument(
