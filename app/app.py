@@ -66,17 +66,6 @@ def renameFiles():
     return new_filenames, timestamp
 
 
-def cleanup():
-    all_files = glob.glob("*")
-    for f in all_files:
-        logging.debug("Removing " + f)
-        try:
-            os.remove(f)
-        except IsADirectoryError:
-            shutil.rmtree(f)
-            pass
-
-
 @timeout_decorator.timeout(DEFAULT_CAMERA_TIMEOUT)
 def get_camera_frames(args):
     cmd = [
