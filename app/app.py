@@ -179,7 +179,6 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
-    args.frames = 1  # Hardcoded to avoid overwritting issue for now.
 
     logging.basicConfig(
         level=logging.DEBUG if args.debug else logging.INFO,
