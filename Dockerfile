@@ -30,3 +30,4 @@ COPY --from=builder /build/eventstreamclient/plugin-client/thermal-raw/build/the
 
 COPY app /app/
 
+ENTRYPOINT ["python3", "/app/app.py"]
