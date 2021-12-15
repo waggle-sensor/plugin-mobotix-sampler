@@ -105,12 +105,6 @@ def get_camera_frames(args):
 
 def main(args):
 
-    # create output directory if it does not exist and change WD.
-    if not os.path.exists(args.workdir):
-        os.makedirs(args.workdir)
-
-    os.chdir(args.workdir)
-
     with Plugin() as plugin:
         while True:
             # Run the Mobotix sampler
@@ -128,7 +122,6 @@ def main(args):
                 logging.debug(timestamp[index])
                 plugin.upload_file(filename, timestamp=timestamp[index])
 
-            cleanup()
 
             exit()
 
