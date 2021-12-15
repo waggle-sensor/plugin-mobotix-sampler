@@ -80,11 +80,11 @@ def run(args):
         "--url",
         args.ip,
         "--user",
-        args.id,
+        args.user,
         "--password",
-        args.pw,
+        args.password,
         "--dir",
-        args.o,
+        args.workdir,
     ]
     with subprocess.Popen(r, stdout=subprocess.PIPE) as process:
         while True:
@@ -94,7 +94,7 @@ def run(args):
                 if output:
                     m = re.search("frame\s#(\d+)", output.strip().decode())
                     print(output.strip().decode())
-                    if m and int(m.groups()[0]) > args.i:
+                    if m and int(m.groups()[0]) > args.frames:
                         print("DONE")
                         return
 
@@ -102,10 +102,10 @@ def run(args):
 def main(args):
 
     # create output directory if it does not exist and change WD.
-    if not os.path.exists(args.o):
-        os.makedirs(args.o)
+    if not os.path.exists(args.workdir):
+        os.makedirs(args.workdir)
 
-    os.chdir(args.o)
+    os.chdir(args.workdir)
 
     with Plugin() as plugin:
         while True:
@@ -135,12 +135,47 @@ if __name__ == "__main__":
                                      This program runs Mobotix sampler for raw 
                                      storing thermal data."""
     )
-    parser.add_argument("--ip", type=str, help="Camera IP or URL", default="10.10.10.1")
-    parser.add_argument("--id", type=str, help="Authenticator User ID.", default="admin")
-    parser.add_argument("--pw", type=str, help="Authenticator Password.", default="password")
-    parser.add_argument("--o", type=str, help="Output directory", default="./data/")
-    parser.add_argument("--i", type=int, help="Interval/Frame [sec]", default=1)
+    parser.add_argument(
+        "--ip",
+        required=True,
+        type=str,
+        dest="ip",
+        default=os.getenv("CAMERA_IP", ""),
+        help="Camera IP or URL",
+    )
+    parser.add_argument(
+        "-u",
+        "--user",
+        dest="user",
+        type=str,
+        default=os.getenv("CAMERA_USER", "admin"),
+        help="Camera User ID",
+    )
+    parser.add_argument(
+        "-p",
+        "--password",
+        dest="password",
+        type=str,
+        default=os.getenv("CAMERA_PASSWORD", "meinsm"),
+        help="Camera Password",
+    )
+    parser.add_argument(
+        "-w",
+        "--workdir",
+        dest="workdir",
+        type=str,
+        default="./data",
+        help="Directory to cache Camara data before upload",
+    )
+    parser.add_argument(
+        "-f",
+        "--frames",
+        dest="frames",
+        type=int,
+        default=os.getenv("FRAMES_PER_RUN", 1),
+        help="Frames to capture per run",
+    )
 
     args = parser.parse_args()
-    args.i = 1  # Hardcoded to avoid overwritting issue for now.
+    args.frames = 1  # Hardcoded to avoid overwritting issue for now.
     main(args)
