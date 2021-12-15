@@ -55,8 +55,11 @@ def cleanup():
     all_files = glob.glob("*")
     for f in all_files:
         print("Removing "+f)
-        os.remove(f)
-
+        try:
+            os.remove(f)
+        except IsADirectoryError:
+            shutil.rmtree(f)
+            pass
 
 
 
@@ -131,6 +134,7 @@ if __name__ == "__main__":
     
     
     args = parser.parse_args()
+    args.i=1 #Hardcoded to avoid overwritting issue for now.
     main(args)
 
 
