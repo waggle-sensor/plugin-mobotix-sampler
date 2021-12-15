@@ -55,7 +55,7 @@ def cleanup():
     all_files = glob.glob("*")
     for f in all_files:
         print("Removing "+f)
-        #os.remove(f)
+        os.remove(f)
 
 
 
@@ -71,7 +71,7 @@ def run(args):
                 if output:
                     m = re.search("frame\s#(\d+)", output.strip().decode())
                     print(output.strip().decode())
-                    if m and int(m.groups()[0]) >= args.i:
+                    if m and int(m.groups()[0]) > args.i:
                         print("DONE")
                         return
 
@@ -99,7 +99,7 @@ def main(args):
         for index, filename in enumerate(filenames):
             print(filename)
             print(timestamp[index])
-            plugin.upload_file(filename, timestamp=timestamp[index])
+            #plugin.upload_file(filename, timestamp=timestamp[index])
 
 
         cleanup()
