@@ -62,10 +62,14 @@
 #include <chrono>
 #include <sys/stat.h>
 
+#include <boost/filesystem.hpp>
+
 #if defined(_MSC_VER)
 #include <fcntl.h>
 #include <io.h>
 #endif
+
+namespace fs = boost::filesystem;
 
 SinkVideo::SinkVideo(const std::string outDir)
     : m_count(0), m_data_dir(outDir)
@@ -343,7 +347,7 @@ MxPEG_ReturnCode SinkVideo::doConsumeVideo(MxPEG_Image::unique_ptr_t buffer)
        << " ts (system): " << ts_ns << std::endl;
 
    // create temporay directory (if it doesn't exist) for in-progress files
-   mkdir(m_tmp_dir.c_str(), 0755);
+   fs::create_directories(m_tmp_dir.c_str());
 
    //write the RGB image data
    writeRBG(*buffer, ts_ns);
@@ -352,8 +356,8 @@ MxPEG_ReturnCode SinkVideo::doConsumeVideo(MxPEG_Image::unique_ptr_t buffer)
    writeThermalData(*buffer, ts_ns);
 
    // move all files from temporary directory to final directory
-   mkdir(m_data_dir.c_str(), 0755);
-   std::cout << "  Saving files to ./" << m_data_dir.c_str() << std::endl;
+   fs::create_directories(m_data_dir.c_str());
+   std::cout << "  Saving files to " << m_data_dir.c_str() << std::endl;
    for (auto &file : m_tmp_files)
    {
       char tempPath[1024];

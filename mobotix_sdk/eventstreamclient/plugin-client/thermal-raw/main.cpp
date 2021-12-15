@@ -106,7 +106,7 @@ int main(int argc, char **argv)
        "url,l", po::value<std::string>(&op_url)->required(), "Camera URL/IP address")(
        "user,u", po::value<std::string>(&op_user)->default_value("admin"), "Camera API access username")(
        "password,p", po::value<std::string>(&op_password)->default_value("meinsm"), "Camera API access password")(
-       "dir,d", po::value<std::string>(&op_datadir)->default_value("data"), "Single directory to store collected data files");
+       "dir,d", po::value<std::string>(&op_datadir)->default_value("data"), "Directory to store collected data files");
 
    po::variables_map vm;
    po::store(po::parse_command_line(argc, argv, desc), vm);
