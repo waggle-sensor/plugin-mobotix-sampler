@@ -365,7 +365,7 @@ MxPEG_ReturnCode SinkVideo::doConsumeVideo(MxPEG_Image::unique_ptr_t buffer)
       char dataPath[1024];
       snprintf(tempPath, 1024, "%s/%s", m_tmp_dir.c_str(), file.c_str());
       snprintf(dataPath, 1024, "%s/%s", m_data_dir.c_str(), file.c_str());
-      rename(tempPath, dataPath);
+      fs::rename(tempPath, dataPath);
    }
    m_tmp_files.clear();
 
