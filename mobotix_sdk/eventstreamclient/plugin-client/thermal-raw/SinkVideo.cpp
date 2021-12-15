@@ -347,6 +347,7 @@ MxPEG_ReturnCode SinkVideo::doConsumeVideo(MxPEG_Image::unique_ptr_t buffer)
        << " ts (system): " << ts_ns << std::endl;
 
    // create temporay directory (if it doesn't exist) for in-progress files
+   fs::remove_all(m_tmp_dir.c_str());
    fs::create_directories(m_tmp_dir.c_str());
 
    //write the RGB image data
@@ -367,6 +368,9 @@ MxPEG_ReturnCode SinkVideo::doConsumeVideo(MxPEG_Image::unique_ptr_t buffer)
       rename(tempPath, dataPath);
    }
    m_tmp_files.clear();
+
+   // remove cache directory
+   fs::remove_all(m_tmp_dir.c_str());
 
    return er_Success;
 }
