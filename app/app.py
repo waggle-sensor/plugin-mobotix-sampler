@@ -75,8 +75,8 @@ def cleanup():
 
 
 @timeout_decorator.timeout(30)
-def run(args):
-    r = [
+def get_camera_frames(args):
+    cmd = [
         "/thermal-raw",
         "--url",
         args.ip,
@@ -87,7 +87,7 @@ def run(args):
         "--dir",
         args.workdir,
     ]
-    with subprocess.Popen(r, stdout=subprocess.PIPE) as process:
+    with subprocess.Popen(cmd, stdout=subprocess.PIPE) as process:
         while True:
             pollresults = select([process.stdout], [], [], 5)[0]
             if pollresults:
@@ -112,7 +112,7 @@ def main(args):
         while True:
             # Run the Mobotix sampler
             try:
-                run(args)
+                get_camera_frames(args)
             except timeout_decorator.timeout_decorator.TimeoutError:
                 logging.warning(f"Timed out attempting to capture {args.frames} frames.")
                 pass
