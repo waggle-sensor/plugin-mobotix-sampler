@@ -18,6 +18,9 @@ from select import select
 import timeout_decorator
 from waggle.plugin import Plugin
 
+# camera image fetch timeout (seconds)
+DEFAULT_CAMERA_TIMEOUT = 120
+
 
 def convertRGBtoJPG():
     rgb_files = glob.glob("*.rgb")
@@ -74,7 +77,7 @@ def cleanup():
             pass
 
 
-@timeout_decorator.timeout(30)
+@timeout_decorator.timeout(DEFAULT_CAMERA_TIMEOUT)
 def get_camera_frames(args):
     cmd = [
         "/thermal-raw",
@@ -112,7 +115,7 @@ def main(args):
         while True:
             # Run the Mobotix sampler
             try:
-                get_camera_frames(args)
+                get_camera_frames(args, timeout=args.camera_timeout)
             except timeout_decorator.timeout_decorator.TimeoutError:
                 logging.warning(f"Timed out attempting to capture {args.frames} frames.")
                 pass
@@ -176,6 +179,14 @@ if __name__ == "__main__":
         type=int,
         default=os.getenv("FRAMES_PER_RUN", 1),
         help="Frames to capture per run",
+    )
+    parser.add_argument(
+        "-t",
+        "--timeout",
+        dest="camera_timeout",
+        type=int,
+        default=os.getenv("CAMERA_TIMEOUT", DEFAULT_CAMERA_TIMEOUT),
+        help="Max time (in seconds) to capture frames from camera per run",
     )
 
     args = parser.parse_args()
