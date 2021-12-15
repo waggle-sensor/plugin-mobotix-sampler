@@ -7,9 +7,9 @@ Created on Mon Dec 13 11:05:11 2021
 """
 
 import argparse
-import sys
 import glob
 import os
+import shutil
 import subprocess
 import re
 from select import select
@@ -59,7 +59,8 @@ def cleanup():
 
 
 
-@timeout_decorator.timeout(300)
+
+@timeout_decorator.timeout(30)
 def run(args):
     r=["/thermal-raw", "--url", args.ip, "--user", args.id,
                         "--password", args.pw, "--dir", args.o]
@@ -84,27 +85,27 @@ def main(args):
         
     os.chdir(args.o)
     
+    with Plugin() as plugin:
+        while True:
+            # Run the Mobotix sampler
+            try:
+                run(args)
+            except timeout_decorator.timeout_decorator.TimeoutError:
+                print("timeout")
+                pass
     
-    while True:
-        # Run the Mobotix sampler
-        try:
-            run(args)
-        except timeout_decorator.timeout_decorator.TimeoutError:
-            print("timeout")
-            pass
-
-        convertRGBtoJPG()
-        filenames, timestamp = renameFiles()
-        
-        for index, filename in enumerate(filenames):
-            print(filename)
-            print(timestamp[index])
-            #plugin.upload_file(filename, timestamp=timestamp[index])
-
-
-        cleanup()
-
-        exit()
+            convertRGBtoJPG()
+            filenames, timestamp = renameFiles()
+            
+            for index, filename in enumerate(filenames):
+                print(filename)
+                print(timestamp[index])
+                plugin.upload_file(filename, timestamp=timestamp[index])
+    
+    
+            cleanup()
+    
+            exit()
 
     
 
@@ -126,7 +127,8 @@ if __name__ == "__main__":
     parser.add_argument('--o', type=str, 
                         help='Output directory', default="./data/")
     parser.add_argument('--i', type=int,
-                        help='Interval/Frame [sec]', default=30)
+                        help='Interval/Frame [sec]', default=1)
+    
     
     args = parser.parse_args()
     main(args)
