@@ -15,16 +15,18 @@ RUN cd /build/eventstreamclient/lib/Linux && \
 
 RUN /usr/bin/make -C /build/eventstreamclient/plugin-client/thermal-raw
 
+# Running docker image
 FROM waggle/plugin-base:1.1.1-base
+
+COPY requirements.txt /app/
+RUN pip3 install --no-cache-dir --upgrade -r /app/requirements.txt
 
 # install library dependencies
 RUN apt-get update && apt-get install -y \
-    libboost-program-options1.71.0
+    libboost-program-options1.71.0 \
+    ffmpeg
 
 COPY --from=builder /build/eventstreamclient/plugin-client/thermal-raw/build/thermal-raw /thermal-raw
 
-# TODO:
-# COPY app.py requirements.txt /app/
-# RUN pip3 install --no-cache-dir -U -r /app/requirements.txt
+COPY app /app/
 
-# ENTRYPOINT ["python3", "-u", "/app/app.py"]
