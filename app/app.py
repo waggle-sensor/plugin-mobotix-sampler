@@ -29,7 +29,7 @@ def convertRGBtoJPG():
         f_jpg = f_rgb.replace(".rgb", ".jpg")
 
         # get the Width and Height of the image from filename
-        match_str = re.search("\d\d\d\dx\d\d\d\d", f_rgb)
+        match_str = re.search("\d+x\d+", f_rgb)
         image_dims = match_str.group()
         subprocess.run(
             [
