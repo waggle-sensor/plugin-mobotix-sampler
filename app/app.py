@@ -43,7 +43,8 @@ def convertRGBtoJPG():
                 "-i",
                 f_rgb,
                 f_jpg,
-            ]
+            ],
+            check=True
         )
 
         logging.debug("Removing " + f_rgb)
@@ -110,7 +111,6 @@ def main(args):
                 logging.debug(filename)
                 logging.debug(timestamp[index])
                 plugin.upload_file(filename, timestamp=timestamp[index])
-                
             break
 
 
