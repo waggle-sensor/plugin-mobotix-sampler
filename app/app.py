@@ -7,12 +7,10 @@ Created on Mon Dec 13 11:05:11 2021
 """
 
 import argparse
-import glob
 import logging
 import os
 from pathlib import Path
 import re
-import shutil
 import subprocess
 from select import select
 
@@ -23,12 +21,19 @@ from waggle.plugin import Plugin
 DEFAULT_CAMERA_TIMEOUT = 120
 
 
-def convertRGBtoJPG(fname_rgb):
-        fname_jpg = fname_rgb.replace(".rgb", ".jpg")
+def extract_timestamp_and_filename(path: Path):
+    timestamp_str, filename = path.name.split("_", 1)
+    timestamp = int(timestamp_str)
+    return timestamp, path.with_name(filename)
 
-        # get the Width and Height of the image from filename
-        match_str = re.search("\d+x\d+", fname_rgb)
-        image_dims = match_str.group()
+
+def extract_resolution(path: Path) -> str:
+    return re.search("\d+x\d+", path.stem).group()
+
+
+def convertRGBtoJPG(fname_rgb: Path):
+        fname_jpg = fname_rgb.with_suffix(".jpg")
+        image_dims = extract_resolution(fname_rgb)
         subprocess.run(
             [
                 "ffmpeg",
@@ -39,30 +44,15 @@ def convertRGBtoJPG(fname_rgb):
                 "-video_size",
                 image_dims,
                 "-i",
-                fname_rgb,
-                fname_jpg,
+                str(fname_rgb),
+                str(fname_jpg),
             ],
             check=True
         )
 
-        logging.debug("Removing " + fname_rgb)
-        os.remove(fname_rgb)
+        logging.debug("Removing %s", fname_rgb)
+        fname_rgb.unlink()
         return fname_jpg
-
-
-def renameFiles(f):
-    fname = os.path.basename(f)
-    dirname = os.path.dirname(f)
-    
-    timestamp_str, filename = fname.split("_", 1)
-    filename = os.path.join(dirname, filename)
-    timestamp = int(timestamp_str)
-
-    logging.debug("Renaming " + f)
-    
-    os.rename(f, filename)
-
-    return filename, timestamp
 
 
 @timeout_decorator.timeout(DEFAULT_CAMERA_TIMEOUT)
@@ -76,23 +66,24 @@ def get_camera_frames(args):
         "--password",
         args.password,
         "--dir",
-        args.workdir,
+        str(args.workdir),
     ]
     with subprocess.Popen(cmd, stdout=subprocess.PIPE) as process:
         while True:
             pollresults = select([process.stdout], [], [], 5)[0]
-            if pollresults:
-                output = pollresults[0].readline()
-                if output:
-                    m = re.search("frame\s#(\d+)", output.strip().decode())
-                    logging.info(output.strip().decode())
-                    if m and int(m.groups()[0]) > args.frames:
-                        logging.info("Max frame count reached, closing camera capture")
-                        return
+            if not pollresults:
+                continue
+            output = pollresults[0].readline()
+            if not output:
+                continue
+            m = re.search("frame\s#(\d+)", output.strip().decode())
+            logging.info(output.strip().decode())
+            if m and int(m.groups()[0]) > args.frames:
+                logging.info("Max frame count reached, closing camera capture")
+                return
 
 
 def main(args):
-
     with Plugin() as plugin:
         while True:
             # Run the Mobotix sampler
@@ -100,23 +91,19 @@ def main(args):
                 get_camera_frames(args, timeout=args.camera_timeout)
             except timeout_decorator.timeout_decorator.TimeoutError:
                 logging.warning(f"Timed out attempting to capture {args.frames} frames.")
-                pass
-            
-            files = glob.glob(os.path.join(args.workdir, "*"))
 
+            # upload files
+            for tspath in args.workdir.glob("*"):
+                if tspath.suffix == ".rgb":
+                    tspath = convertRGBtoJPG(tspath)
 
-            #for index, filename in enumerate(filenames):
-                        
-            for file in files:
-                if Path(file).suffix == '.rgb':
-                    file = convertRGBtoJPG(file)
-                    
-                filename, timestamp = renameFiles(file)
-                
-                logging.debug(filename)
+                timestamp, path = extract_timestamp_and_filename(tspath)
+                os.rename(tspath, path)
+
+                logging.debug(path)
                 logging.debug(timestamp)
-                
-                plugin.upload_file(filename, timestamp=timestamp)
+                plugin.upload_file(path, timestamp=timestamp)
+
             break
 
 
@@ -153,7 +140,7 @@ if __name__ == "__main__":
         "-w",
         "--workdir",
         dest="workdir",
-        type=str,
+        type=Path,
         default="./data",
         help="Directory to cache Camara data before upload",
     )
