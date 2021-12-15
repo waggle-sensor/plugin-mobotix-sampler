@@ -71,7 +71,7 @@ INCLUDE_DIR := $(SDK_DIR)/include
 
 LIB_DIR := $(SDK_DIR)/lib/$(OS)
 LIB_EV_CLIENT := eventstreamclient
-LIB_BOOST := -lboost_program_options
+LIB_BOOST := -lboost_program_options -lboost_filesystem
 
 CXXFLAGS += -I$(INCLUDE_DIR) -std=c++11 -Wall -ggdb 
 

@@ -23,6 +23,7 @@ RUN pip3 install --no-cache-dir --upgrade -r /app/requirements.txt
 
 # install library dependencies
 RUN apt-get update && apt-get install -y \
+    libboost-filesystem1.71.0 \
     libboost-program-options1.71.0 \
     ffmpeg
 
