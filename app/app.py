@@ -9,9 +9,9 @@ Created on Mon Dec 13 11:05:11 2021
 import argparse
 import logging
 import os
-from pathlib import Path
 import re
 import subprocess
+from pathlib import Path
 from select import select
 
 import timeout_decorator
@@ -32,27 +32,27 @@ def extract_resolution(path: Path) -> str:
 
 
 def convertRGBtoJPG(fname_rgb: Path):
-        fname_jpg = fname_rgb.with_suffix(".jpg")
-        image_dims = extract_resolution(fname_rgb)
-        subprocess.run(
-            [
-                "ffmpeg",
-                "-f",
-                "rawvideo",
-                "-pixel_format",
-                "bgra",
-                "-video_size",
-                image_dims,
-                "-i",
-                str(fname_rgb),
-                str(fname_jpg),
-            ],
-            check=True
-        )
+    fname_jpg = fname_rgb.with_suffix(".jpg")
+    image_dims = extract_resolution(fname_rgb)
+    subprocess.run(
+        [
+            "ffmpeg",
+            "-f",
+            "rawvideo",
+            "-pixel_format",
+            "bgra",
+            "-video_size",
+            image_dims,
+            "-i",
+            str(fname_rgb),
+            str(fname_jpg),
+        ],
+        check=True,
+    )
 
-        logging.debug("Removing %s", fname_rgb)
-        fname_rgb.unlink()
-        return fname_jpg
+    logging.debug("Removing %s", fname_rgb)
+    fname_rgb.unlink()
+    return fname_jpg
 
 
 @timeout_decorator.timeout(DEFAULT_CAMERA_TIMEOUT)

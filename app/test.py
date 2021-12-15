@@ -1,22 +1,33 @@
 import unittest
 from pathlib import Path
+
 import app
 
 
 class TestApp(unittest.TestCase):
-
     def test_extract_timestamp_and_filename(self):
         test_cases = [
-            (Path("1639591954702392600_6144x2048.rgb"), (1639591954702392600, Path("6144x2048.rgb"))),
-            (Path("path/to/1639591954702392600_6144x2048.rgb"), (1639591954702392600, Path("path/to/6144x2048.rgb"))),
-            (Path("/path/to/1639591954702392600_6144x2048.rgb"), (1639591954702392600, Path("/path/to/6144x2048.rgb"))),
-            (Path("1639581754702392600_right_336x252_14bit.thermal.raw"), (1639581754702392600, Path("right_336x252_14bit.thermal.raw"))),
+            (
+                Path("1639591954702392600_6144x2048.rgb"),
+                (1639591954702392600, Path("6144x2048.rgb")),
+            ),
+            (
+                Path("path/to/1639591954702392600_6144x2048.rgb"),
+                (1639591954702392600, Path("path/to/6144x2048.rgb")),
+            ),
+            (
+                Path("/path/to/1639591954702392600_6144x2048.rgb"),
+                (1639591954702392600, Path("/path/to/6144x2048.rgb")),
+            ),
+            (
+                Path("1639581754702392600_right_336x252_14bit.thermal.raw"),
+                (1639581754702392600, Path("right_336x252_14bit.thermal.raw")),
+            ),
             (Path("1639581754702392600_no_suffix"), (1639581754702392600, Path("no_suffix"))),
         ]
 
         for input, expect in test_cases:
             self.assertEqual(app.extract_timestamp_and_filename(input), expect)
-
 
     def test_extract_resolution(self):
         test_cases = [
