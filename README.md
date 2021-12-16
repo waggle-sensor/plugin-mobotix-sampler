@@ -13,10 +13,18 @@ python3 /app/app.py --ip <Camera IP>
 Example:
 
 ```
-python3 /app/app.py --ip 10.11.12.13 --user user1 --password password1 -w /data/files/here/ -f 50 -t 5
+python3 /app/app.py --ip 10.11.12.13 --user user1 --password password1 -w /data/files/here/ --frames 50 --timeout 5 --loops 3 --loopsleep 2
 ```
 
-The above example will capture at-most 50 frames & thermal data over 5 seconds and use the `/data/files/here` director as it's working directory.
+The above example will capture at-most 50 frames & thermal data over 5 seconds per loop.  Each loop will sleep for 2 seconds and only 3 loops will be run.  The `/data/files/here` directory will be used as the working directory.
+
+Example:
+
+```
+python3 /app/app.py --ip 10.11.12.13 --user user1 --password password1 -w /data/files/here/ --loopsleep 10
+```
+
+The above example will run forever ("infinite" loops), capturing the default number of frames every loop with 10 seconds sleep between loops.
 
 *Note*: See the additional command line options via `python3 /app/app.py --help`.
 
