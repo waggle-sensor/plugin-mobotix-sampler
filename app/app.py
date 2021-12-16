@@ -32,7 +32,7 @@ def extract_resolution(path: Path) -> str:
     return re.search("\d+x\d+", path.stem).group()
 
 
-def convertRGBtoJPG(fname_rgb: Path):
+def convert_rgb_to_jpg(fname_rgb: Path):
     fname_jpg = fname_rgb.with_suffix(".jpg")
     image_dims = extract_resolution(fname_rgb)
     subprocess.run(
@@ -104,7 +104,7 @@ def main(args):
             # upload files
             for tspath in args.workdir.glob("*"):
                 if tspath.suffix == ".rgb":
-                    tspath = convertRGBtoJPG(tspath)
+                    tspath = convert_rgb_to_jpg(tspath)
                     frames = frames + 1
 
                 timestamp, path = extract_timestamp_and_filename(tspath)
