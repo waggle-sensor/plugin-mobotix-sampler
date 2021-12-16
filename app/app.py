@@ -11,6 +11,7 @@ import logging
 import os
 import re
 import subprocess
+import time
 from pathlib import Path
 from select import select
 
@@ -84,8 +85,16 @@ def get_camera_frames(args):
 
 
 def main(args):
+    def loop_check(i, m):
+        return m < 0 or i < m
+
+    loops = 0
     with Plugin() as plugin:
-        while True:
+        while loop_check(loops, args.loops):
+            loops = loops + 1
+            logging.info(f"Loop {loops} of " + ("infinite" if args.loops < 0 else str(args.loops)))
+            frames = 0
+
             # Run the Mobotix sampler
             try:
                 get_camera_frames(args, timeout=args.camera_timeout)
@@ -96,6 +105,7 @@ def main(args):
             for tspath in args.workdir.glob("*"):
                 if tspath.suffix == ".rgb":
                     tspath = convertRGBtoJPG(tspath)
+                    frames = frames + 1
 
                 timestamp, path = extract_timestamp_and_filename(tspath)
                 os.rename(tspath, path)
@@ -104,7 +114,10 @@ def main(args):
                 logging.debug(timestamp)
                 plugin.upload_file(path, timestamp=timestamp)
 
-            break
+            logging.info(f"Processed {frames} frames")
+            if loop_check(loops, args.loops):
+                logging.info(f"Sleeping for {args.loopsleep} seconds between loops")
+                time.sleep(args.loopsleep)
 
 
 if __name__ == "__main__":
@@ -149,8 +162,8 @@ if __name__ == "__main__":
         "--frames",
         dest="frames",
         type=int,
-        default=os.getenv("FRAMES_PER_RUN", 1),
-        help="Frames to capture per run",
+        default=os.getenv("FRAMES_PER_LOOP", 1),
+        help="Frames to capture per loop",
     )
     parser.add_argument(
         "-t",
@@ -158,7 +171,23 @@ if __name__ == "__main__":
         dest="camera_timeout",
         type=int,
         default=os.getenv("CAMERA_TIMEOUT", DEFAULT_CAMERA_TIMEOUT),
-        help="Max time (in seconds) to capture frames from camera per run",
+        help="Max time (in seconds) to capture frames from camera per loop",
+    )
+    parser.add_argument(
+        "-l",
+        "--loops",
+        dest="loops",
+        type=int,
+        default=os.getenv("LOOPS", -1),
+        help="Number of loops to perform. Defaults to 'infinite' (-1)",
+    )
+    parser.add_argument(
+        "-s",
+        "--loopsleep",
+        dest="loopsleep",
+        type=int,
+        default=os.getenv("LOOP_SLEEP", 30),
+        help="Seconds to sleep in-between loops",
     )
 
     args = parser.parse_args()
