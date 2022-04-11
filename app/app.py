@@ -14,12 +14,13 @@ import subprocess
 import time
 from pathlib import Path
 from select import select
+import sys
 
 import timeout_decorator
 from waggle.plugin import Plugin
 
 # camera image fetch timeout (seconds)
-DEFAULT_CAMERA_TIMEOUT = 120
+DEFAULT_CAMERA_TIMEOUT = 5
 
 
 def extract_timestamp_and_filename(path: Path):
@@ -100,6 +101,7 @@ def main(args):
                 get_camera_frames(args, timeout=args.camera_timeout)
             except timeout_decorator.timeout_decorator.TimeoutError:
                 logging.warning(f"Timed out attempting to capture {args.frames} frames.")
+                sys.exit("Exit error: Camera Timeout.")
 
             # upload files
             for tspath in args.workdir.glob("*"):
