@@ -57,7 +57,7 @@ def convert_rgb_to_jpg(fname_rgb: Path):
     return fname_jpg
 
 
-@timeout_decorator.timeout(DEFAULT_CAMERA_TIMEOUT)
+@timeout_decorator.timeout(DEFAULT_CAMERA_TIMEOUT, use_signals=False)
 def get_camera_frames(args):
     cmd = [
         "/thermal-raw",
