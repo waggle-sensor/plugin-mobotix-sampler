@@ -105,6 +105,9 @@ def main(args):
             except timeout_decorator.timeout_decorator.TimeoutError:
                 logging.warning(f"Timed out attempting to capture {args.frames} frames.")
                 sys.exit("Exit error: Camera Timeout.")
+            except Exception as e:
+                logging.warning(f"Unknown exception {e} during capture of {args.frames} frames.")
+                sys.exit("Exit error: Unknown Camera Exception.")
 
             # upload files
             for tspath in args.workdir.glob("*"):
