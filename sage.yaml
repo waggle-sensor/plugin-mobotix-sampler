@@ -1,6 +1,6 @@
 name: "mobotix-sampler"
 description: "Captures & uploads frames and thermal data from a Mobotix thermal camera stream."
-version: "1.22.4.11"
+version: "1.22.4.13"
 authors: "Bhupendra Raut <braut@anl.gov>"
 collaborators: "Bhupendra Raut, Dario Dematties Reyes, Joseph Swantek*, Neal Conrad, Nicola Ferrier, Pete Beckman, Raj Sankaran, Robert Jackson, Scott Collis, Sean Shahkarami, Seongha Park, Sergey Shemyakin, Wolfgang Gerlach, Yongho Kim"
 funding: "NSF 1935984"
