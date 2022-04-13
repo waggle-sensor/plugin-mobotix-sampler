@@ -11,16 +11,16 @@ import logging
 import os
 import re
 import subprocess
+import sys
 import time
 from pathlib import Path
 from select import select
-import sys
 
 import timeout_decorator
 from waggle.plugin import Plugin
 
 # camera image fetch timeout (seconds)
-DEFAULT_CAMERA_TIMEOUT = 5
+DEFAULT_CAMERA_TIMEOUT = 120
 
 
 def extract_timestamp_and_filename(path: Path):
