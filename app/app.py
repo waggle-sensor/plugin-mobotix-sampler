@@ -70,13 +70,16 @@ def get_camera_frames(args):
         "--dir",
         str(args.workdir),
     ]
+    logging.info(f"Calling camera interface: {cmd}")
     with subprocess.Popen(cmd, stdout=subprocess.PIPE) as process:
         while True:
             pollresults = select([process.stdout], [], [], 5)[0]
             if not pollresults:
+                logging.warning("Timeout waiting for camera interface output")
                 continue
             output = pollresults[0].readline()
             if not output:
+                logging.warning("No data from camera interface output")
                 continue
             m = re.search("frame\s#(\d+)", output.strip().decode())
             logging.info(output.strip().decode())
